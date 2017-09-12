@@ -127,7 +127,7 @@ class App extends Component {
         .then((response) => {
             console.log(response);
             let todos = this.state.todos;
-            todos[id] = this.state.currentTodoText;
+            todos[id].title = this.state.currentTodoText;
             this.setState({todos: todos});
        })
          .catch((error) => {
