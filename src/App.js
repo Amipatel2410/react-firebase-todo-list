@@ -12,10 +12,12 @@ class App extends Component {
         newTodoText: '',
         todos: {}
       };
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleNewTodoTextChange = this.handleNewTodoTextChange.bind(this);
+    this.handleCurrentTodoTextChange = this.handleCurrentTodoTextChange.bind(this);
+    this.createTodo = this.createTodo.bind(this);
     this.deleteTodo = this.deleteTodo.bind(this);
     this.selectTodo = this.selectTodo.bind(this);
+    this.updateCurrentTodo = this.updateCurrentTodo.bind(this);
     }
 
     componentDidMount(){
@@ -32,7 +34,7 @@ class App extends Component {
       });
     }
 
-    handleSubmit(event) {
+    createTodo(event) {
 
       event.preventDefault();
       const newTodo = {
@@ -58,11 +60,14 @@ class App extends Component {
 
     }
 
-    handleChange(event) {
+    handleNewTodoTextChange(event) {
+    event.preventDefault();
+    this.setState({newTodoText: event.target.value});
+  }
 
+    handleCurrentTodoTextChange(event) {
       event.preventDefault();
-      this.setState({newTodoText: event.target.value});
-
+      this.setState({currentTodoText: event.target.value});
     }
 
     deleteTodo(todoId)
@@ -85,7 +90,7 @@ class App extends Component {
 
     selectTodo(todoId)
     {
-        this.setState({currentTodo: todoId});
+        this.setState({currentTodo: todoId , currentTodoText: this.state.todos[todoId].title});
     }
 
     renderSelectedTodo(){
@@ -95,24 +100,50 @@ class App extends Component {
       if(this.state.currentTodo){
       let currentTodo = this.state.todos[this.state.currentTodo];
       content = (
-          <div>
-            <h2> {currentTodo.title} </h2>
-          </div>
+          <form onSubmit={this.updateCurrentTodo}>
+          <input
+            className="w-100"
+            value={this.state.currentTodoText}
+            onChange={this.handleCurrentTodoTextChange} />
+          </form>
         );
         }
-
         return content;
+    }
+
+    updateCurrentTodo(event){
+
+        event.preventDefault();
+
+        let id = this.state.currentTodo;
+        let todoData = {title: this.state.currentTodoText};
+
+      axios({
+            url: `/todos/${id}.json`,
+            baseURL: 'https://todo-list-app-6de68.firebaseio.com/',
+            method: 'PATCH',
+            data: todoData
+          })
+        .then((response) => {
+            console.log(response);
+            let todos = this.state.todos;
+            todos[id] = this.state.currentTodoText;
+            this.setState({todos: todos});
+       })
+         .catch((error) => {
+          console.log(error);
+        });
     }
 
     renderNewTodoBox() {
       return(
         <div className="new-todo-box pb-2">
-        <form onSubmit={this.handleSubmit}>
+        <form onSubmit={this.createTodo}>
           <input
             className="w-100"
             placeholder="What do you have to do?"
             value={this.state.newTodoText}
-            onChange={this.handleChange} />
+            onChange={this.handleNewTodoTextChange} />
         </form>
       </div>
         );
